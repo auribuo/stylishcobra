@@ -9,9 +9,6 @@
 
 `StylishCobra` allows to customize the cobra text output with [lipgloss](https://github.com/charmbracelet/lipgloss) styles.
 
-![ColoredCobra Config](https://user-images.githubusercontent.com/8699212/159517387-a82eafa4-a0bb-4bc9-a05a-67b05e6ae15c.png)
-
-
 It's very easy to add `StylishCobra` to your project!
 
 ---
@@ -29,25 +26,28 @@ go get -u github.com/auribuo/stylishcobra
 Open your `cmd/root.go` and insert this code:
 
 ```go
-import "github.com/auribuo/stylishcobra"
+import (
+    "github.com/auribuo/stylishcobra"
+    "github.com/charmbracelet/lipgloss"
+)
 ```
 
 Then, before the call to `Execute()` of your root command put the calls to customize cobra
 
 ```go
-	stylishcobra.Setup(rootCmd). // This would be enough, it would do nothing
-		StyleHeadings(lipgloss.NewStyle().Underline(true).Bold(true).Foreground(lipgloss.ANSIColor(termenv.ANSICyan))).
-		StyleCommands(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIYellow)).Bold(true)).
-		StyleAliases(lipgloss.NewStyle().Bold(true).Italic(true)).
-		StyleCmdShortDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))).
-		StyleExample(lipgloss.NewStyle().Italic(true)).
-		StyleExecName(lipgloss.NewStyle().Bold(true)).
-		StyleFlags(lipgloss.NewStyle().Bold(true)).
-		StyleFlagsDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIRed))).
-		StyleFlagsDataType(lipgloss.NewStyle().Foreground(lipgloss.Color("#444444")).Italic(true)).
-		Init() // Call Init() to apply the styles
+stylishcobra.Setup(rootCmd). // This would be enough, it would do nothing
+	StyleHeadings(lipgloss.NewStyle().Underline(true).Bold(true).Foreground(lipgloss.ANSIColor(termenv.ANSICyan))).
+	StyleCommands(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIYellow)).Bold(true)).
+	StyleAliases(lipgloss.NewStyle().Bold(true).Italic(true)).
+	StyleCmdShortDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))).
+	StyleExample(lipgloss.NewStyle().Italic(true)).
+	StyleExecName(lipgloss.NewStyle().Bold(true)).
+	StyleFlags(lipgloss.NewStyle().Bold(true)).
+	StyleFlagsDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIRed))).
+	StyleFlagsDataType(lipgloss.NewStyle().Foreground(lipgloss.Color("#444444")).Italic(true)).
+	Init() // Call Init() to apply the styles
 
-    stylishcobra.Init(cfg) // Initialize with a *Config. Is a bit more tedious, bacuse lipgloss.NewStyle() returns no pointer but styles in the config are stored as pointers
+stylishcobra.Init(cfg) // Initialize with a *Config. Is a bit more tedious, bacuse lipgloss.NewStyle() returns no pointer but styles in the config are stored as pointers
 ```
 
 You can also reuse styles etc. For more information refer to the lipgloss docs.
