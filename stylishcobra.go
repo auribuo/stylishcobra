@@ -1,4 +1,4 @@
-// ColoredCobra allows you to colorize Cobra's text output,
+// StyledCobra allows you to colorize Cobra's text output using lipgloss,
 // making it look better using simple settings to customize
 // individual parts of console output.
 //
@@ -6,23 +6,29 @@
 //
 // 1. Insert in cmd/root.go file of your project :
 //
-//	import cc "github.com/ivanpirog/coloredcobra"
+//	import (
+//	     "github.com/auribuo/stylishcobra"
+//	     "github.com/charmbracelet/lipgloss"
+//	 )
 //
 // 2. Put the following code to the beginning of the Execute() function:
 //
-//	cc.Init(&cc.Config{
-//	    RootCmd:    rootCmd,
-//	    Headings:   cc.Bold + cc.Underline,
-//	    Commands:   cc.Yellow + cc.Bold,
-//	    ExecName:   cc.Bold,
-//	    Flags:      cc.Bold,
-//	})
+//	 stylishcobra.Setup(rootCmd).
+//		StyleHeadings(lipgloss.NewStyle().Underline(true).Bold(true).Foreground(lipgloss.ANSIColor(termenv.ANSICyan))).
+//		StyleCommands(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIYellow)).Bold(true)).
+//		StyleAliases(lipgloss.NewStyle().Bold(true).Italic(true)).
+//		StyleCmdShortDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIGreen))).
+//		StyleExample(lipgloss.NewStyle().Italic(true)).
+//		StyleExecName(lipgloss.NewStyle().Bold(true)).
+//		StyleFlags(lipgloss.NewStyle().Bold(true)).
+//		StyleFlagsDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIRed))).
+//		StyleFlagsDataType(lipgloss.NewStyle().Foreground(lipgloss.Color("#444444")).Italic(true)).
+//		Init()
 //
 // 3. Build & execute your code.
 //
-// Copyright © 2022 Ivan Pirog <ivan.pirog@gmail.com>.
+// Copyright © 2024 Aurelio Buonomo
 // Released under the MIT license.
-// Project home: https://github.com/ivanpirog/coloredcobra
 package stylishcobra
 
 import (
@@ -34,22 +40,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Config is a settings structure which sets styles for individual parts of Cobra text output.
-//
-// Note that RootCmd is required.
-//
-// Example:
-//
-//	c := &cc.Config{
-//	   RootCmd:       rootCmd,
-//	   Headings:      cc.HiWhite + cc.Bold + cc.Underline,
-//	   Commands:      cc.Yellow + cc.Bold,
-//	   CmdShortDescr: cc.Cyan,
-//	   ExecName:      cc.Bold,
-//	   Flags:         cc.Bold,
-//	   Aliases:       cc.Bold,
-//	   Example:       cc.Italic,
-//	}
+// Config contains all the styles that can be applied using stylishcobra.
+// Use `Setup()` to start a builder to configure. Optionally you can also instanciate your own instance
 type Config struct {
 	RootCmd         *cobra.Command
 	Headings        *lipgloss.Style
@@ -65,6 +57,7 @@ type Config struct {
 	NoBottomNewline bool
 }
 
+// Setup starts the builing process and supplies the required root command
 func Setup(rootCmd *cobra.Command) *Config {
 	return &Config{RootCmd: rootCmd}
 }
@@ -134,33 +127,19 @@ func (cfg *Config) EnableBottomNewline() *Config {
 	return cfg
 }
 
-func (cfg *Config) Init() {
-	initCobra(cfg)
-}
-
-func Init(cfg *Config) {
-	cfg.Init()
-}
-
-func sprintFunc(st *lipgloss.Style) func(...interface{}) string {
-	return func(a ...interface{}) string {
-		return st.Render(fmt.Sprint(a...))
-	}
-}
-
 // Init patches Cobra's usage template with configuration provided.
-func initCobra(cfg *Config) {
+func (cfg *Config) Init() {
 
 	if cfg.RootCmd == nil {
-		panic("coloredcobra: Root command pointer is missing.")
+		panic("stylishcobra: Root command pointer is missing.")
 	}
 
 	// Get usage template
 	tpl := cfg.RootCmd.UsageTemplate()
+	// Debug line, uncomment when needed
+	// fmt.Println(tpl)
 
-	//
 	// Add extra line breaks for headings
-	//
 	if cfg.NoExtraNewlines == false {
 		tpl = strings.NewReplacer(
 			"Usage:", "\nUsage:\n",
@@ -175,11 +154,8 @@ func initCobra(cfg *Config) {
 		tpl = re.ReplaceAllString(tpl, "\nFlags:\n")
 	}
 
-	//
 	// Styling headers
-	//
 	if cfg.Headings != nil {
-		// Add template function to style the headers
 		cobra.AddTemplateFunc("HeadingStyle", sprintFunc(cfg.Headings))
 
 		// Wrap template headers into a new function
@@ -196,17 +172,13 @@ func initCobra(cfg *Config) {
 		tpl = re.ReplaceAllString(tpl, `$1{{HeadingStyle "Flags:"}}$2`)
 	}
 
-	//
 	// Styling commands
-	//
 	if cfg.Commands != nil {
-		// Add template function to style commands
 		cobra.AddTemplateFunc("CommandStyle", sprintFunc(cfg.Commands))
 		cobra.AddTemplateFunc("sum", func(a, b int) int {
 			return a + b
 		})
 
-		// Patch usage template
 		re := regexp.MustCompile(`(?i){{\s*rpad\s+.Name\s+.NamePadding\s*}}`)
 		tpl = re.ReplaceAllLiteralString(tpl, "{{rpad (CommandStyle .Name) (sum .NamePadding 12)}}")
 
@@ -214,22 +186,14 @@ func initCobra(cfg *Config) {
 		tpl = re.ReplaceAllLiteralString(tpl, "{{rpad (CommandStyle .CommandPath) (sum .CommandPathPadding 12)}}")
 	}
 
-	//
 	// Styling a short desription of commands
-	//
 	if cfg.CmdShortDescr != nil {
 		cobra.AddTemplateFunc("CmdShortStyle", sprintFunc(cfg.CmdShortDescr))
-
-		re := regexp.MustCompile(`(?ism)({{\s*range\s+.Commands\s*}}.*?){{\s*.Short\s*}}`)
-		tpl = re.ReplaceAllString(tpl, `$1{{CmdShortStyle .Short}}`)
+		tpl = strings.NewReplacer("{{.Short}}", "{{CmdShortStyle .Short}}").Replace(tpl)
 	}
 
-	//
 	// Styling executable file name
-	//
 	if cfg.ExecName != nil {
-
-		// Add template functions
 		cobra.AddTemplateFunc("ExecStyle", sprintFunc(cfg.ExecName))
 		cobra.AddTemplateFunc("UseLineStyle", func(s string) string {
 			spl := strings.Split(s, " ")
@@ -237,7 +201,6 @@ func initCobra(cfg *Config) {
 			return strings.Join(spl, " ")
 		})
 
-		// Patch usage template
 		re := regexp.MustCompile(`(?i){{\s*.CommandPath\s*}}`)
 		tpl = re.ReplaceAllLiteralString(tpl, "{{ExecStyle .CommandPath}}")
 
@@ -245,9 +208,7 @@ func initCobra(cfg *Config) {
 		tpl = re.ReplaceAllLiteralString(tpl, "{{UseLineStyle .UseLine}}")
 	}
 
-	//
 	// Styling flags
-	//
 	if cfg.Flags != nil || cfg.FlagsDescr != nil || cfg.FlagsDataType != nil {
 		cobra.AddTemplateFunc("FlagStyle", func(s string) string {
 
@@ -299,14 +260,11 @@ func initCobra(cfg *Config) {
 
 		})
 
-		// Patch usage template
 		re := regexp.MustCompile(`(?i)(\.(InheritedFlags|LocalFlags)\.FlagUsages)`)
 		tpl = re.ReplaceAllString(tpl, "FlagStyle $1")
 	}
 
-	//
 	// Styling aliases
-	//
 	if cfg.Aliases != nil {
 		cobra.AddTemplateFunc("AliasStyle", sprintFunc(cfg.Aliases))
 
@@ -314,9 +272,7 @@ func initCobra(cfg *Config) {
 		tpl = re.ReplaceAllLiteralString(tpl, "{{AliasStyle .NameAndAliases}}")
 	}
 
-	//
 	// Styling the example text
-	//
 	if cfg.Example != nil {
 		cobra.AddTemplateFunc("ExampleStyle", sprintFunc(cfg.Example))
 
@@ -332,5 +288,16 @@ func initCobra(cfg *Config) {
 	// Apply patched template
 	cfg.RootCmd.SetUsageTemplate(tpl)
 	// Debug line, uncomment when needed
+	// fmt.Println("---")
 	// fmt.Println(tpl)
+}
+
+func Init(cfg *Config) {
+	cfg.Init()
+}
+
+func sprintFunc(st *lipgloss.Style) func(...interface{}) string {
+	return func(a ...interface{}) string {
+		return st.Render(fmt.Sprint(a...))
+	}
 }

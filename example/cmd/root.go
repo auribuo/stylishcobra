@@ -43,7 +43,7 @@ func Execute() {
 		StyleHeadings(lipgloss.NewStyle().Underline(true).Bold(true).Foreground(lipgloss.ANSIColor(termenv.ANSICyan))).
 		StyleCommands(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIYellow)).Bold(true)).
 		StyleAliases(lipgloss.NewStyle().Bold(true).Italic(true)).
-		StyleCmdShortDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))).
+		StyleCmdShortDescr(lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIGreen))).
 		StyleExample(lipgloss.NewStyle().Italic(true)).
 		StyleExecName(lipgloss.NewStyle().Bold(true)).
 		StyleFlags(lipgloss.NewStyle().Bold(true)).

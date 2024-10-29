@@ -4,7 +4,7 @@ go 1.0
 
 require (
 	github.com/charmbracelet/lipgloss v0.13.1
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.8.1
 )
 
 require (
